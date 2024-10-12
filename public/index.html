@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metallic Agenda</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(45deg, #2c3e50, #4b6cb7);
+            font-family: 'Arial', sans-serif;
+            color: #fff;
+        }
+        .agenda-container {
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 900px;
+        }
+        .agenda-header {
+            background-color: #333;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.5rem;
+            color: #1abc9c;
+            border: 1px solid #1abc9c;
+        }
+        .agenda-header h1 {
+            margin: 0;
+        }
+        .event {
+            background-color: #1abc9c;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        .event-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #333;
+        }
+        .event-time {
+            font-size: 1rem;
+            color: #555;
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 20px;
+            color: #bbb;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="agenda-container">
+        <div class="agenda-header">
+            <h1>Mijn Metallic Agenda</h1>
+        </div>
+
+        <div id="agenda-content">
+            <!-- De evenementen zullen hier worden weergegeven -->
+        </div>
+    </div>
+</div>
+
+<footer>
+    <p>&copy; 2024 Mijn Agenda | Gemaakt met een metallic touch</p>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Voeg ical.js toe -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ical.js/1.3.0/ical.min.js"></script>
+
+<!-- ICAL integratie -->
+<script>
+    // Agenda container
+    const agendaContent = document.getElementById('agenda-content');
+
+    // Functie om een datum te formatteren
+    function formatDate(date) {
+        return date.toLocaleDateString('nl-NL', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    }
+
+    // Fetch de ICAL data via de Node.js proxy
+    fetch('/proxy')
+        .then(response => response.text())
+        .then(data => {
+            // Gebruik ical.js om het ICAL-bestand te parseren
+            const jcalData = ICAL.parse(data);
+            const comp = new ICAL.Component(jcalData);
+            const vevents = comp.getAllSubcomponents('vevent');
+
+            vevents.forEach(event => {
+                const summary = event.getFirstPropertyValue('summary');
+                const startDate = new ICAL.Time(event.getFirstPropertyValue('dtstart')).toJSDate();
+                const endDate = new ICAL.Time(event.getFirstPropertyValue('dtend')).toJSDate();
+
+                // Maak een nieuwe div voor elk evenement
+                const eventDiv = document.createElement('div');
+                eventDiv.classList.add('event');
+
+                // Titel van het evenement
+                const titleDiv = document.createElement('div');
+                titleDiv.classList.add('event-title');
+                titleDiv.textContent = summary;
+
+                // Tijd van het evenement
+                const timeDiv = document.createElement('div');
+                timeDiv.classList.add('event-time');
+                timeDiv.textContent = `${formatDate(startDate)} - ${formatDate(endDate)}`;
+
+                // Voeg titel en tijd toe aan het evenement
+                eventDiv.appendChild(titleDiv);
+                eventDiv.appendChild(timeDiv);
+
+                // Voeg het evenement toe aan de agenda
+                agendaContent.appendChild(eventDiv);
+            });
+        })
+        .catch(error => console.error('Error fetching ICAL:', error));
+</script>
+
+</body>
+</html>
